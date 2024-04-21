@@ -1,0 +1,24 @@
+{
+  "name": "uclogic-libwacom-tablet-descriptions",
+  "version": "1.0.0",
+  "description": "Use me to create basic libwacom tablet description files",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoseExposito/uclogic-libwacom-tablet-descriptions.git"
+  },
+  "author": "José Expósito",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/JoseExposito/uclogic-libwacom-tablet-descriptions/issues"
+  },
+  "homepage": "https://github.com/JoseExposito/uclogic-libwacom-tablet-descriptions#readme",
+  "dependencies": {
+    "rimraf": "^5.0.5"
+  }
+}
