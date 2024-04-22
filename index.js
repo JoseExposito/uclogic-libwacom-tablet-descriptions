@@ -114,7 +114,7 @@ EvdevCodes=${evdevCodes.slice(0, numButtons).join(';')}
     }
 };
 
-const saveTabletDescriptionFile = (resultsPath, {tabletName, tabletDescription}) => {
+const saveTabletDescriptionFile = (resultsPath, firmware, {tabletName, tabletDescription}) => {
     const filename = tabletName
         .toLowerCase()
         .replaceAll('huion ', '')
@@ -126,15 +126,23 @@ const saveTabletDescriptionFile = (resultsPath, {tabletName, tabletDescription})
         .replaceAll('&', '-')
         .replaceAll('  ', ' ')
         .replaceAll(' ', '-');
-    
-    let version = 1;
-    let filePath = path.resolve(resultsPath, `huion-${filename}.tablet`);
-    while (fs.existsSync(filePath)) {
-        filePath = path.resolve(resultsPath, `huion-${filename}-v${version}.tablet`);
-        version++;
-    }
+    const filePath = path.resolve(resultsPath, `huion-${filename}.tablet`);
 
-    fs.writeFileSync(filePath, tabletDescription, 'utf-8');
+    if (!fs.existsSync(filePath)) {
+        fs.writeFileSync(filePath, tabletDescription, 'utf-8');
+    } else {
+        let newDescription = '';
+        const contents = fs.readFileSync(filePath, 'utf-8');
+        contents.split('\n').forEach((l) => {
+            if (l.startsWith('DeviceMatch=')) {
+                newDescription += `${l}usb|256c|006e||${firmware};usb|256c|006d||${firmware};\n`;
+            } else {
+                newDescription += `${l}\n`;
+            }
+        });
+
+        fs.writeFileSync(filePath, newDescription, 'utf-8');
+    }
 };
 
 const generateTabletDescriptionFiles = (driverUrl) => {
@@ -158,7 +166,7 @@ const generateTabletDescriptionFiles = (driverUrl) => {
         .filter(([firmware, { ProductName }]) => !!ProductName) // Remove empty product names
         .forEach(([firmware, values]) => {
             const res = generateTabletDescriptionFile(firmware, values);
-            saveTabletDescriptionFile(destination, res);
+            saveTabletDescriptionFile(destination, firmware, res);
         });
 };
 
