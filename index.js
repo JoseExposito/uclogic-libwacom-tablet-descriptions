@@ -51,7 +51,9 @@ const generateTabletDescriptionFile = (firmware, values) => {
     const buttonChars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'];
     const evdevCodes = ['BTN_0', 'BTN_1', 'BTN_2', 'BTN_3', 'BTN_4', 'BTN_5', 'BTN_6', 'BTN_7', 'BTN_8', 'BTN_9', 'BTN_SOUTH', 'BTN_EAST', 'BTN_C', 'BTN_NORTH', 'BTN_WEST', 'BTN_Z', 'BTN_TL', 'BTN_TR', 'BTN_TL2', 'BTN_TR2'];
 
-    const name = values.ProductName;
+    const name = values.ProductName
+        .replaceAll('（', ' (')
+        .replaceAll('）', ')');
     const numButtons = values.HBUTTON ? Object.keys(values.HBUTTON).length : 0;
     const numTouchStrips = values.MBUTTON ? Object.keys(values.MBUTTON).length : 0;
     
@@ -118,6 +120,8 @@ const saveTabletDescriptionFile = (resultsPath, {tabletName, tabletDescription})
         .replaceAll('huion ', '')
         .replaceAll('(', '')
         .replaceAll(')', '')
+        .replaceAll('（', '-')
+        .replaceAll('）', '')
         .replaceAll('/', '-')
         .replaceAll('&', '-')
         .replaceAll('  ', ' ')
