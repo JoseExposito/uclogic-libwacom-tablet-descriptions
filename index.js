@@ -150,6 +150,18 @@ const saveTabletDescriptionFile = (resultsPath, firmware, {tabletName, tabletDes
     }
 };
 
+const parseStatuImgJs = () => {
+    const huionJsonPath = path.resolve(TMP_PATH, 'usr', 'lib', 'huiontablet', 'res', 'StatuImg.js');
+    const huionJsonContents = fs.readFileSync(huionJsonPath, 'utf-8');
+    const huionJsonContentsSanitized = huionJsonContents.replace('\0', '');
+    const huionJson = JSON.parse(huionJsonContentsSanitized);
+
+    return Object.fromEntries(
+        Object.entries(huionJson)
+            .filter(([firmware, { ProductName }]) => !!ProductName) // Remove empty product names (pens)
+    );
+};
+
 const generateTabletDescriptionFiles = (driverUrl) => {
     const filename = path.basename(new URL(driverUrl).pathname);
     const destination = path.resolve(RESULTS_PATH, filename);
@@ -162,17 +174,12 @@ const generateTabletDescriptionFiles = (driverUrl) => {
         fs.mkdirSync(destination);
     }
 
-    const huionJsonPath = path.resolve(TMP_PATH, 'usr', 'lib', 'huiontablet', 'res', 'StatuImg.js');
-    const huionJsonContents = fs.readFileSync(huionJsonPath, 'utf-8');
-    const huionJsonContentsSanitized = huionJsonContents.replace('\0', '');
-    const huionJson = JSON.parse(huionJsonContentsSanitized);
+    const statuImgJs = parseStatuImgJs();
 
-    Object.entries(huionJson)
-        .filter(([firmware, { ProductName }]) => !!ProductName) // Remove empty product names
-        .forEach(([firmware, values]) => {
-            const res = generateTabletDescriptionFile(firmware, values);
-            saveTabletDescriptionFile(destination, firmware, res);
-        });
+    Object.entries(statuImgJs).forEach(([firmware, values]) => {
+        const res = generateTabletDescriptionFile(firmware, values);
+        saveTabletDescriptionFile(destination, firmware, res);
+    });
 };
 
 const main = async (driverUrl) => {
