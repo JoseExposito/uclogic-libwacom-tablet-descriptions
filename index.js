@@ -83,6 +83,9 @@ const generateTabletDescriptionFile = (firmware, values) => {
 `# This tablet description file has been generated using an automated tool:
 # https://github.com/JoseExposito/uclogic-libwacom-tablet-descriptions
 # If you own this tablet, please improve it.
+#
+# sysinfo missing - if you own this device please provide it. See this link
+# for details: https://github.com/linuxwacom/libwacom/wiki/Adding-a-new-device
 
 [Device]
 Name=${name}
