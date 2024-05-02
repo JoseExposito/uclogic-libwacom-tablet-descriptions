@@ -97,8 +97,8 @@ IntegratedIn=${integratedIn}
 
 [Features]
 NumStrips=${numTouchStrips}
+NumRings=0
 Reversible=${reversible}
-Ring=false
 Stylus=true
 Touch=false
 TouchSwitch=false
