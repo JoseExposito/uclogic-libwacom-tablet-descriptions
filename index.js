@@ -162,6 +162,112 @@ const parseStatuImgJs = () => {
     );
 };
 
+const parseLayoutTabletCfg = (statuImgJs) => {
+    // The layout_tablet.cfg is a binary file with the following structure:
+    // Header (84 bytes)
+    // Configuration (3784 bytes)
+    // |- Firmware name (24 bytes)
+    // |- Image width (4 bytes)
+    // |- Image height (4 bytes)
+    // |- Frame start X (4 bytes)
+    // |- Frame start Y (4 bytes)
+    // |- Frame end X (4 bytes)
+    // |- Frame end Y (4 bytes)
+    // |- Unknown (16 bytes)
+    // |- Button 0 start X (4 bytes)
+    // |- Button 0 start Y (4 bytes)
+    // |- Button 0 end X (4 bytes)
+    // |- Button 0 end Y (4 bytes)
+    // |- ... Other buttons
+    const headerLength = 84;
+    const cfgLength = 3784;
+    const firmwareLength = 24;
+    const unknownLength = 16;
+
+    // An object with structure:
+    // {
+    //   Firmware_Name: {
+    //     imageWidth,
+    //     imageHeight,
+    //     frame: { x, y, w, h },
+    //     buttons: [{ x, y, w, h }, { x, y, w, h }, ...],
+    //   }
+    // }
+    const result = {};
+
+    const cfgPath = path.resolve(TMP_PATH, 'usr', 'lib', 'huiontablet', 'res', 'layout_tablet.cfg');
+    const cfg = fs.readFileSync(cfgPath);
+
+    const numCfgs = (cfg.length - headerLength) / cfgLength;
+    if (!Number.isInteger(numCfgs)) {
+        throw new Error('layout_tablet.cfg does not have the expected size');
+    }
+
+    for (let n = headerLength; n < cfg.length; n += cfgLength) {
+        let offset = n;
+
+        const firmwareName = cfg.toString('utf-8', offset, offset + firmwareLength).replaceAll('\0', '');
+        cfg.toString('ascii')
+        offset += firmwareLength;
+
+        const imageWidth = cfg.readInt16LE(offset);
+        offset += 4;
+        const imageHeight = cfg.readInt16LE(offset);
+        offset += 4;
+
+        const frameXStart = cfg.readInt16LE(offset);
+        offset += 4;
+        const frameYStart = cfg.readInt16LE(offset);
+        offset += 4;
+        const frameXEnd = cfg.readInt16LE(offset);
+        offset += 4;
+        const frameYEnd = cfg.readInt16LE(offset);
+        offset += 4;
+
+        offset += unknownLength;
+
+        const buttons = [];
+        const numButtons = statuImgJs[firmwareName]['HBUTTON']
+            ? Object.keys(statuImgJs[firmwareName]['HBUTTON']).length
+            : 0;
+        for (let b = 0; b < numButtons; b++) {
+            const buttonXStart = cfg.readInt16LE(offset);
+            offset += 4;
+            const buttonYStart = cfg.readInt16LE(offset);
+            offset += 4;
+            const buttonXEnd = cfg.readInt16LE(offset);
+            offset += 4;
+            const buttonYEnd = cfg.readInt16LE(offset);
+            offset += 4;
+            
+            buttons.push({
+                x: buttonXStart,
+                y: buttonYStart,
+                w: buttonXEnd - buttonXStart,
+                h: buttonYEnd - buttonYStart,
+            });
+        }
+
+        if (result[firmwareName]) {
+            console.log(`### Duplicated firmware ${firmwareName} found in layout_tablet.cfg ###`);
+        }
+
+        result[firmwareName] = {
+            imageWidth,
+            imageHeight,
+            frame: {
+                x: frameXStart,
+                y: frameYStart,
+                w: frameXEnd - frameXStart,
+                h: frameYEnd - frameYStart,
+            },
+            buttons,
+        };
+    }
+
+    return result;
+};
+
 const generateTabletDescriptionFiles = (driverUrl) => {
     const filename = path.basename(new URL(driverUrl).pathname);
     const destination = path.resolve(RESULTS_PATH, filename);
@@ -175,6 +281,7 @@ const generateTabletDescriptionFiles = (driverUrl) => {
     }
 
     const statuImgJs = parseStatuImgJs();
+    const layoutTabletCfg = parseLayoutTabletCfg(statuImgJs);
 
     Object.entries(statuImgJs).forEach(([firmware, values]) => {
         const res = generateTabletDescriptionFile(firmware, values);
