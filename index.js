@@ -58,7 +58,7 @@ const generateTabletDescriptionFile = (firmware, values) => {
     const name = values.ProductName
         .replaceAll('（', ' (')
         .replaceAll('）', ')');
-    const model_name = name.replaceAll(/huion /gi, '');
+    const modelName = name.replaceAll(/huion /gi, '');
     const numButtons = values.HBUTTON ? Object.keys(values.HBUTTON).length : 0;
     const numTouchStrips = values.MBUTTON ? Object.keys(values.MBUTTON).length : 0;
     
@@ -94,7 +94,7 @@ const generateTabletDescriptionFile = (firmware, values) => {
 
 [Device]
 Name=${name}
-ModelName=${model_name}
+ModelName=${modelName}
 Class=${tabletClass}
 # Product ID is unknown, please fix
 DeviceMatch=${getDeviceMatch(firmware)}
