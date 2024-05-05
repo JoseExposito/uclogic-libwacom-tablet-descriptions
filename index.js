@@ -51,13 +51,17 @@ const getDeviceMatch = (firmware) => (
     `usb|256c|006e||${firmware};usb|256c|006d||${firmware};usb|256c|006f||${firmware};usb|256c|0064||${firmware};`
 );
 
+const getTabletName = (productName) => (
+    productName
+        .replaceAll('（', ' (')
+        .replaceAll('）', ')')
+);
+
 const generateTabletDescriptionFile = (firmware, values) => {
     const buttonChars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'];
     const evdevCodes = ['BTN_0', 'BTN_1', 'BTN_2', 'BTN_3', 'BTN_4', 'BTN_5', 'BTN_6', 'BTN_7', 'BTN_8', 'BTN_9', 'BTN_SOUTH', 'BTN_EAST', 'BTN_C', 'BTN_NORTH', 'BTN_WEST', 'BTN_Z', 'BTN_TL', 'BTN_TR', 'BTN_TL2', 'BTN_TR2'];
 
-    const name = values.ProductName
-        .replaceAll('（', ' (')
-        .replaceAll('）', ')');
+    const name = getTabletName(values.ProductName);
     const modelName = name.replaceAll(/huion /gi, '');
     const numButtons = values.HBUTTON ? Object.keys(values.HBUTTON).length : 0;
     const numTouchStrips = values.MBUTTON ? Object.keys(values.MBUTTON).length : 0;
@@ -117,13 +121,10 @@ Left=${buttonChars.slice(0, numButtons).join(';')}
 EvdevCodes=${evdevCodes.slice(0, numButtons).join(';')}
 `;
 
-    return {
-        tabletName: name,
-        tabletDescription,
-    }
+    return tabletDescription;
 };
 
-const saveTabletDescriptionFile = (resultsPath, firmware, {tabletName, tabletDescription}) => {
+const saveTabletDescriptionFile = (resultsPath, firmware, tabletName, tabletDescription) => {
     const filename = tabletName
         .toLowerCase()
         .replaceAll('huion ', '')
@@ -288,8 +289,9 @@ const generateTabletDescriptionFiles = (driverUrl) => {
     const layoutTabletCfg = parseLayoutTabletCfg(statuImgJs);
 
     Object.entries(statuImgJs).forEach(([firmware, values]) => {
-        const res = generateTabletDescriptionFile(firmware, values);
-        saveTabletDescriptionFile(destination, firmware, res);
+        const tabletName = getTabletName(values.ProductName);
+        const tabletDescription = generateTabletDescriptionFile(firmware, values);
+        saveTabletDescriptionFile(destination, firmware, tabletName, tabletDescription);
     });
 };
 
