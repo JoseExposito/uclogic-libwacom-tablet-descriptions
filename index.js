@@ -57,6 +57,20 @@ const getTabletName = (productName) => (
         .replaceAll('）', ')')
 );
 
+const getTabletId = (productName) => (
+    'huion-' + productName
+        .toLowerCase()
+        .replaceAll('huion ', '')
+        .replaceAll('(', '')
+        .replaceAll(')', '')
+        .replaceAll('（', '-')
+        .replaceAll('）', '')
+        .replaceAll('/', '-')
+        .replaceAll('&', '-')
+        .replaceAll('  ', ' ')
+        .replaceAll(' ', '-')
+);
+
 const generateTabletDescriptionFile = (firmware, values) => {
     const buttonChars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'];
     const evdevCodes = ['BTN_0', 'BTN_1', 'BTN_2', 'BTN_3', 'BTN_4', 'BTN_5', 'BTN_6', 'BTN_7', 'BTN_8', 'BTN_9', 'BTN_SOUTH', 'BTN_EAST', 'BTN_C', 'BTN_NORTH', 'BTN_WEST', 'BTN_Z', 'BTN_TL', 'BTN_TR', 'BTN_TL2', 'BTN_TR2'];
@@ -125,18 +139,7 @@ EvdevCodes=${evdevCodes.slice(0, numButtons).join(';')}
 };
 
 const saveTabletDescriptionFile = (resultsPath, firmware, tabletName, tabletDescription) => {
-    const filename = tabletName
-        .toLowerCase()
-        .replaceAll('huion ', '')
-        .replaceAll('(', '')
-        .replaceAll(')', '')
-        .replaceAll('（', '-')
-        .replaceAll('）', '')
-        .replaceAll('/', '-')
-        .replaceAll('&', '-')
-        .replaceAll('  ', ' ')
-        .replaceAll(' ', '-');
-    const filePath = path.resolve(resultsPath, `huion-${filename}.tablet`);
+    const filePath = path.resolve(resultsPath, `${getTabletId(tabletName)}.tablet`);
 
     if (!fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, tabletDescription, 'utf-8');
