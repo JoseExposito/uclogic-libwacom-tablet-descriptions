@@ -57,6 +57,7 @@ const getTabletName = (productName) => (
         .replaceAll('（', ' (')
         .replaceAll('）', ')')
         .replaceAll('&', '-')
+        .replaceAll('|', '-')
 );
 
 const getTabletId = (productName) => (
@@ -69,6 +70,7 @@ const getTabletId = (productName) => (
         .replaceAll('）', '')
         .replaceAll('/', '-')
         .replaceAll('&', '-')
+        .replaceAll('|', '-')
         .replaceAll('  ', ' ')
         .replaceAll(' ', '-')
 );
