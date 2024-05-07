@@ -10,6 +10,7 @@ import * as util from 'util';
 const DOWNLOADS_PATH = 'downloads';
 const TMP_PATH = path.resolve(DOWNLOADS_PATH, 'tmp');
 const RESULTS_PATH = 'results';
+const SVGS_PATH = path.resolve(RESULTS_PATH, 'layouts');
 
 const DRIVER_URL_15_0_0_89 = 'https://driverdl.huion.com/driver/Linux/HuionTablet_v15.0.0.89.202205241352.x86_64.deb';
 const DRIVER_URL_15_0_0_103 = 'https://driverdl.huion.com/driver/X10_G930L_Q630M/HuionTablet_v15.0.0.103.202208301443.x86_64.deb';
@@ -174,8 +175,8 @@ const generateTabletSvg = (tabletName, cfg) => {
 `;
 };
 
-const saveTabletDescriptionFile = (resultsPath, firmware, tabletName, tabletDescription) => {
-    const filePath = path.resolve(resultsPath, `${getTabletId(tabletName)}.tablet`);
+const saveTabletDescriptionFile = (firmware, tabletName, tabletDescription) => {
+    const filePath = path.resolve(RESULTS_PATH, `${getTabletId(tabletName)}.tablet`);
 
     if (!fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, tabletDescription, 'utf-8');
@@ -183,7 +184,7 @@ const saveTabletDescriptionFile = (resultsPath, firmware, tabletName, tabletDesc
         let newDescription = '';
         const contents = fs.readFileSync(filePath, 'utf-8');
         contents.split('\n').forEach((l) => {
-            if (l.startsWith('DeviceMatch=')) {
+            if (l.startsWith('DeviceMatch=') && !l.includes(firmware)) {
                 newDescription += `${l}${getDeviceMatch(firmware)}\n`;
             } else {
                 newDescription += `${l}\n`;
@@ -194,8 +195,8 @@ const saveTabletDescriptionFile = (resultsPath, firmware, tabletName, tabletDesc
     }
 };
 
-const saveTabletSvg = (resultsPath, tabletName, tabletSvg) => {
-    const filePath = path.resolve(resultsPath, 'layouts', `${getTabletId(tabletName)}.svg`);
+const saveTabletSvg = (tabletName, tabletSvg) => {
+    const filePath = path.resolve(SVGS_PATH, `${getTabletId(tabletName)}.svg`);
     fs.writeFileSync(filePath, tabletSvg, 'utf-8');
 };
 
@@ -317,22 +318,7 @@ const parseLayoutTabletCfg = (statuImgJs) => {
     return result;
 };
 
-const generateTabletDescriptionFiles = (driverUrl) => {
-    const filename = path.basename(new URL(driverUrl).pathname);
-    const destination = path.resolve(RESULTS_PATH, filename);
-
-    if (!fs.existsSync(RESULTS_PATH)) {
-        fs.mkdirSync(RESULTS_PATH);
-    }
-
-    if (!fs.existsSync(destination)) {
-        fs.mkdirSync(destination);
-    }
-
-    if (!fs.existsSync(path.resolve(destination, 'layouts'))) {
-        fs.mkdirSync(path.resolve(destination, 'layouts'));
-    }
-
+const generateTabletDescriptionFiles = () => {
     const statuImgJs = parseStatuImgJs();
     const layoutTabletCfg = parseLayoutTabletCfg(statuImgJs);
 
@@ -340,12 +326,20 @@ const generateTabletDescriptionFiles = (driverUrl) => {
         const tabletName = getTabletName(values.ProductName);
         const tabletDescription = generateTabletDescriptionFile(firmware, values);
         const tabletSvg = generateTabletSvg(tabletName, layoutTabletCfg[firmware]);
-        saveTabletDescriptionFile(destination, firmware, tabletName, tabletDescription);
-        saveTabletSvg(destination, tabletName, tabletSvg);
+        saveTabletDescriptionFile(firmware, tabletName, tabletDescription);
+        saveTabletSvg(tabletName, tabletSvg);
     });
 };
 
-const main = async (driverUrl) => {
+const processDriver = async (driverUrl) => {
+    if (!fs.existsSync(RESULTS_PATH)) {
+        fs.mkdirSync(RESULTS_PATH);
+    }
+
+    if (!fs.existsSync(SVGS_PATH)) {
+        fs.mkdirSync(SVGS_PATH);
+    }
+
     console.log(`Downloading driver from ${driverUrl}`);
     const driverPath = await downloadDriver(driverUrl);
 
@@ -353,7 +347,13 @@ const main = async (driverUrl) => {
     await extractDriver(driverPath);
 
     console.log('Generating tablet description files');
-    generateTabletDescriptionFiles(driverUrl);
+    generateTabletDescriptionFiles();
+};
+
+const main = async () => {
+    await processDriver(DRIVER_URL_15_0_0_89);
+    await processDriver(DRIVER_URL_15_0_0_103);
+    await processDriver(DRIVER_URL_15_0_0_121);
 }
 
-main(DRIVER_URL_15_0_0_121);
+main();
