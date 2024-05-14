@@ -201,6 +201,10 @@ const saveTabletDescriptionFile = (vendor, firmware, tabletName, tabletDescripti
             }
         });
 
+        // Remove empty lines and the beginning and end of the description
+        newDescription = newDescription.replace(/^\s+|\s+$/g, '');
+        newDescription += '\n';
+
         fs.writeFileSync(filePath, newDescription, 'utf-8');
     }
 };
