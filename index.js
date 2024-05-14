@@ -180,7 +180,7 @@ const generateTabletSvg = (vendor, tabletName, cfg) => {
                       y="${y + h / 2 + 2}"
                       style="text-anchor:start;">${btn}</text>
             </g>`;
-    })}
+    }).join('')}
 </svg>
 `;
 };
